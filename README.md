@@ -1,6 +1,8 @@
 # Sports Analytics
 
-R Shiny app for G League shooting by court zone (version 0.1.0). Data comes
+[![CI](https://github.com/PawanRamaMali/Sports-Analytics-App/actions/workflows/ci.yml/badge.svg)](https://github.com/PawanRamaMali/Sports-Analytics-App/actions/workflows/ci.yml)
+
+R Shiny app for G League shooting by court zone. Data comes
 from the stats.gleague.nba.com shot-location report: per-game makes,
 attempts and FG% in seven zones for every player of a season.
 
@@ -19,7 +21,9 @@ After sign-in:
 
 The season picker in the navbar switches every screen to another season.
 
-What each version has is in [docs/VERSION_HISTORY.md](docs/VERSION_HISTORY.md).
+The current version is shown in the navbar and on the sign-in page. What
+each version has is in [docs/VERSION_HISTORY.md](docs/VERSION_HISTORY.md),
+with release notes in [docs/change_log/](docs/change_log/).
 
 ## Running locally
 

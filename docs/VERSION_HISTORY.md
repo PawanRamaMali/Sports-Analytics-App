@@ -5,7 +5,7 @@
 | Application | Sports Analytics, G League shooting by court zone |
 | Application type | R Shiny web application |
 | Primary branch | `main` |
-| Current version | 0.1.0 |
+| Current version | 0.2.0 |
 | Version source | `APP_VERSION` in `global.R` |
 
 ## Versioning policy
@@ -22,11 +22,12 @@ hand.
 
 | Version | Date | Summary |
 |---|---|---|
-| 0.1.0 | 2026-10-19 | First version: analysis screens, sign-in with roles, admin data and users, tests and CI |
+| 0.2.0 | 2026-10-19 | First release: analysis screens, sign-in with roles, admin data and users, tests and CI |
 
-## 0.1.0 (2026-10-19)
+## 0.2.0 (2026-10-19)
 
-Replaces the login template with the analytics app.
+Replaces the login template with the analytics app (PR #1). Release notes:
+[change_log/RELEASE_NOTES_v0.2.md](change_log/RELEASE_NOTES_v0.2.md).
 
 ### Analysis
 - Players table with team and attempts filters, search and CSV download.
