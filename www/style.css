@@ -1,0 +1,103 @@
+/* Sports Analytics: small additions on top of the bslib theme (app-* classes). */
+
+/* Before sign-in only the welcome page shows. */
+html.app-no-nav .navbar { display: none; }
+
+body { background: #f9f9f7; }
+
+.app-title { font-weight: 600; letter-spacing: 0.01em; }
+.app-title svg { vertical-align: -3px; }
+.app-version-chip {
+  margin-left: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--bs-primary);
+  vertical-align: middle;
+}
+
+.app-season .form-group { margin: 0; }
+.app-season .form-select { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.app-user { padding: 0.35rem 0.7rem; color: #333; font-weight: 500; white-space: nowrap; }
+.app-role {
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: #eef4fc;
+  color: var(--bs-primary);
+  font-size: 0.72rem;
+}
+.app-signout { padding: 0.35rem 0.7rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+
+/* ---- Welcome ---- */
+.app-welcome {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 400px);
+  gap: 3rem;
+  align-items: center;
+  max-width: 1040px;
+  margin: 8vh auto 2rem;
+  padding: 0 1rem;
+}
+.app-welcome-brand h1 { font-weight: 700; color: #0d366b; margin: 0.75rem 0; }
+.app-welcome-brand .lead { color: #52514e; }
+.app-welcome-mark {
+  display: inline-flex;
+  padding: 0.75rem;
+  border-radius: 16px;
+  background: #eb6834;
+  color: #fff;
+}
+.app-welcome-points { list-style: none; padding: 0; margin-top: 1.5rem; color: #0b0b0b; }
+.app-welcome-points li { margin: 0.5rem 0; }
+.app-welcome-points svg { color: var(--bs-primary); margin-right: 0.4rem; }
+.app-signin { box-shadow: 0 8px 30px rgba(13, 54, 107, 0.08); }
+.app-version-note { margin-top: 1rem; font-size: 0.75rem; color: #6c757d; text-align: center; }
+@media (max-width: 768px) {
+  .app-welcome { grid-template-columns: 1fr; margin-top: 2rem; gap: 1.5rem; }
+}
+
+/* ---- Filters ---- */
+.app-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 1.5rem;
+}
+.app-filter-row .form-group { margin-bottom: 0; }
+.app-filter-row .shiny-input-container:not(.shiny-input-container-inline) { width: auto; min-width: 220px; }
+.app-filter-bar { margin-bottom: 1rem; }
+.app-filter-end { margin-left: auto; }
+
+/* ---- Stat tiles ---- */
+.app-stat {
+  background: #fff;
+  border: 1px solid rgba(11, 11, 11, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+.app-stat-label { font-size: 0.78rem; color: #52514e; }
+.app-stat-value { font-size: 1.5rem; font-weight: 600; color: #0b0b0b; line-height: 1.3; }
+.app-stat-sub { font-size: 0.75rem; color: #898781; }
+
+/* ---- Tables and legends ---- */
+.app-clickable { cursor: pointer; }
+.rt-td, .rt-th { font-variant-numeric: tabular-nums; }
+.app-key {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 0.45rem;
+}
+.app-diff-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+.app-diff-legend .text-muted { margin: 0 0.5rem; }
+.app-diff-swatch { width: 22px; height: 10px; border-radius: 2px; }
+
+.app-empty { text-align: center; padding: 3rem 1rem; }

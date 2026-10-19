@@ -1,0 +1,61 @@
+name: Scrape season
+
+# Fetches a season from stats.gleague.nba.com (scraper/run_scrape.R) and
+# commits data/seasons/<season>.csv when it changed. Runs weekly for the
+# season in the SCRAPE_SEASON repository variable (default 2020-21), or by
+# hand for any season. stats.gleague.nba.com may refuse requests from cloud
+# runners; the admin Data screen can fetch or import a season instead.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      season:
+        description: Season, for example 2020-21
+        required: true
+        default: "2020-21"
+      season_type:
+        description: Season type
+        type: choice
+        options: ["Regular Season", "Playoffs"]
+        default: "Regular Season"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SEASON: ${{ inputs.season || vars.SCRAPE_SEASON || '2020-21' }}
+      SEASON_TYPE: ${{ inputs.season_type || 'Regular Season' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Scrape
+        run: Rscript scraper/run_scrape.R "$SEASON" --type "$SEASON_TYPE"
+
+      - name: Commit the season if it changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/seasons
+          if git diff --cached --quiet; then
+            echo "No change in season $SEASON"
+            exit 0
+          fi
+          git commit -m "data: update season $SEASON"
+          git push origin HEAD:main
