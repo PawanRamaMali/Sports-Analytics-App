@@ -14,8 +14,9 @@ On this machine Rscript is `C:/Program Files/R/R-4.5.1/bin/Rscript.exe` (not on 
 Rscript -e "shiny::runApp('.', port = 3838)"                        # run (needs a user: .env.local, see .env.example)
 Rscript tests/testthat.R                                            # R unit tests
 Rscript -e 'testthat::test_file("tests/testthat/test-metrics.R")'   # one test file
-RSCRIPT="C:/Program Files/R/R-4.5.1/bin/Rscript.exe" npx playwright test   # browser tests
-npx playwright test e2e/admin.spec.ts -g "import"                   # one file / one test
+pip install -r tests/ui/requirements-test.txt                       # UI test deps (Python 3.12)
+RSCRIPT="C:/Program Files/R/R-4.5.1/bin/Rscript.exe" pytest tests/ui -v   # UI tests
+pytest tests/ui/test_admin.py -k import                             # one file / one test
 Rscript scraper/run_scrape.R 2020-21 [--type Playoffs]              # fetch a season into data/seasons
 ```
 
@@ -31,7 +32,7 @@ No linter or build step. CI (`.github/workflows/ci.yml`) runs both test suites; 
 
 **UI conventions.** reactable row clicks go through `row_click_js(ns("input"), field)` to a Shiny input. Chart colours are fixed slots in `series_colors` (diet groups always map to the same slot; Compare keeps a player's slot while selected); the shot chart uses the blue-gray-red `diff_color()` scale for FG% against the league. Styles are `app-*` classes in `www/style.css`.
 
-**Browser tests.** `playwright.config.ts` starts `e2e/start-app.R` on port 3839, which copies `data/seasons` to `e2e/.tmp` and creates users `e2e-admin` / `e2e-analyst`, so tests never touch `data/`. Tests run serially (one R process). Selectors: navbar screens are `getByRole('tab', { name })`; selectize inputs via `pick()` in `e2e/helpers.ts`; reactable rows via `tableRows(page, outputId)`.
+**UI tests.** pytest + pytest-playwright (sync API) in `tests/ui/`, using the installed Chrome (`--browser-channel chrome` in `pytest.ini`, no browser download). The session fixture in `conftest.py` copies `data/seasons` to a temp dir, points `SPORTS_DATA_DIR` / `SPORTS_USERS_FILE` there and runs `tests/ui/start_app.R` (creates `e2e-admin` / `e2e-analyst`) on port 3839 (`UI_PORT`), so tests never touch `data/`; the port must be free. On Windows the app is stopped with `taskkill /T` because Rscript.exe runs R in a child process. Tests run serially against one R process. Use web-first `expect()` (default timeout 15s), never `time.sleep`. Selectors in `helpers.py`: navbar screens via `screen()` (tabs), selectize via `pick()`, reactable rows via `table_rows(page, output_id)`.
 
 ## Versioning
 

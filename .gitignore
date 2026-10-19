@@ -11,12 +11,11 @@
 .env.local
 data/users.csv
 
-# Browser tests
-node_modules/
+# UI tests (Python)
+.venv/
+__pycache__/
+.pytest_cache/
 test-results/
-playwright-report/
-blob-report/
-e2e/.tmp/
 
 # testthat failure snapshots
 tests/testthat/_problems/

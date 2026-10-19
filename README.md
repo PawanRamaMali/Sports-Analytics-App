@@ -83,21 +83,23 @@ runners; fetching from the app or importing a CSV still works then.
 Rscript tests/testthat.R
 Rscript -e 'testthat::test_file("tests/testthat/test-metrics.R")'   # one file
 
-# Browser tests: Playwright starts the app with its own users and data
-# (e2e/start-app.R) and uses it in Chromium like a user would
-npm ci
-npx playwright install chromium
-npx playwright test
-npx playwright test e2e/admin.spec.ts         # one file
-npx playwright test -g "sign out"              # by test title
-npx playwright show-report                     # HTML report of the last run
+# UI tests: pytest + Playwright start the app with its own users and data
+# (tests/ui/conftest.py) and use it in the installed Chrome like a user would
+pip install -r tests/ui/requirements-test.txt
+pytest tests/ui -v
+pytest tests/ui/test_admin.py                 # one file
+pytest tests/ui -k sign_out                   # by test name
+pytest tests/ui -v --headed --slowmo 300      # watch it run
 ```
 
 Set `RSCRIPT` to the Rscript path when it is not on `PATH`, for example
-`RSCRIPT="C:/Program Files/R/R-4.5.1/bin/Rscript.exe"`.
+`RSCRIPT="C:/Program Files/R/R-4.5.1/bin/Rscript.exe"`. The UI tests need
+Python 3.12 and Google Chrome; [tests/ui/README.md](tests/ui/README.md) has
+the details, what each file covers and how to debug.
 
 `.github/workflows/ci.yml` runs both suites on every push and pull request
-to `main` and keeps the Playwright report as a build artifact.
+to `main` on a Windows runner and keeps the JUnit report (plus screenshots
+and traces of failed tests) as a build artifact.
 
 ## Code layout
 
@@ -112,7 +114,7 @@ www/                 CSS and JS
 data/seasons/        season files
 scraper/             command-line scraper
 tests/testthat/      R unit tests
-e2e/                 Playwright browser tests
+tests/ui/            UI tests (pytest + Playwright)
 ```
 
 `global.R` sources `access/`, `engine/` and `modules/` in name order, so a
@@ -128,7 +130,7 @@ With rsconnect:
 rsconnect::deployApp(appDir = ".", appName = "sports-analytics")
 ```
 
-`.rscignore` keeps tests, docs, the scraper and Node files out of the
+`.rscignore` keeps tests, docs, the scraper and Python files out of the
 bundle. A redeploy replaces the bundle, so in production point
 `SPORTS_USERS_FILE` and `SPORTS_DATA_DIR` at persistent storage and set
 `SPORTS_ADMIN_USER` / `SPORTS_ADMIN_PASSWORD` in the host's environment
