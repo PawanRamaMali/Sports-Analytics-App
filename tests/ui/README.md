@@ -36,11 +36,29 @@ must be free.
 | `test_admin.py` | adding users, password rules, self-delete guard, CSV import, fetch validation |
 | `test_edge_cases.py` | lockout after five failures, username trimming and case, empty search, the three-player limit, bad season names, missing file, duplicate players, duplicate usernames |
 
+## Reports
+
+Every run (local or CI) writes to `test-results/`:
+
+| File | What it is |
+|---|---|
+| `report.html` | All tests with result, time, a screenshot of the page at the end of each test (click to enlarge), and for failures the error, the full traceback and a link to the Playwright trace. Filter by passed / failed / skipped. |
+| `summary.md` | The results as a Markdown table, with the failure messages. |
+| `screenshots/` | One PNG per test. |
+| `results.json` | The raw results report.py works from. |
+| `results.xml` | JUnit XML (when run with `--junitxml`, as CI does). |
+
+`conftest.py` collects the results and takes the screenshots; `report.py`
+writes the files. In CI the table goes into the job summary and into a
+comment on the pull request (one comment, updated on every push), and
+`test-results/` is uploaded as the `ui-test-report` artifact, linked from
+the comment.
+
 ## Debug
 
 - `PWDEBUG=1 pytest tests/ui -k lock --headed` opens the Playwright Inspector.
-- A failed test leaves a screenshot and a trace under `test-results/`;
-  open the trace with `playwright show-trace test-results/<test>/trace.zip`.
+- A failed test leaves a Playwright trace under `test-results/` (linked from
+  `report.html`); open it with `playwright show-trace test-results/<test>/trace.zip`.
 
 ## Find element IDs
 

@@ -98,8 +98,11 @@ Python 3.12 and Google Chrome; [tests/ui/README.md](tests/ui/README.md) has
 the details, what each file covers and how to debug.
 
 `.github/workflows/ci.yml` runs both suites on every push and pull request
-to `main` on a Windows runner and keeps the JUnit report (plus screenshots
-and traces of failed tests) as a build artifact.
+to `main` on a Windows runner. On a pull request it comments a table of
+which UI tests passed or failed (updated on every push) and uploads the
+`ui-test-report` artifact: `report.html` with a screenshot of every test,
+plus traces of failed tests and the JUnit XML. Local runs write the same
+report to `test-results/`.
 
 ## Code layout
 
