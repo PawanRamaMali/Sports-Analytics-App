@@ -1,0 +1,13 @@
+{
+  "name": "sports-analytics-app-e2e",
+  "private": true,
+  "description": "Browser tests for the Sports Analytics Shiny app",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  }
+}

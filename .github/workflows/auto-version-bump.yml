@@ -1,0 +1,164 @@
+name: Auto Version Bump
+
+# Bumps APP_VERSION in global.R (and Version in DESCRIPTION) every time a PR
+# merges into main.
+# The bump size is decided from the merged PR's title:
+#   - "major:" prefix, "!:" anywhere (conventional-commits breaking marker),
+#     or the phrase "BREAKING CHANGE" (case-insensitive)  -> major
+#   - "feat:" / "feature:" / "minor:" prefix (case-insensitive)              -> minor
+#   - everything else                                                        -> patch
+#
+# The bump commit is a direct push to main by the github-actions bot, tagged
+# with "[skip ci]" so it does not re-trigger the rest of the pipeline. The
+# workflow uses pull_request.closed (not push) so it does not re-fire on its
+# own bump commit.
+#
+# In addition to the version bump, this workflow drops a placeholder
+# docs/change_log/RELEASE_NOTES_v<new>.md so the release notes never drift
+# behind the code. See the "Create release-notes stub" step below.
+#
+# If main branch protection requires PRs, either allow the github-actions bot
+# to bypass required PRs for main, or swap secrets.GITHUB_TOKEN below for a
+# PAT/GH App token with bypass permission.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  # Serialise version bumps so two back-to-back merges do not race on the same
+  # global.R line. cancel-in-progress:false so the second bump still runs.
+  group: auto-version-bump-main
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Decide bump type from PR title
+        id: bump
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          title="$PR_TITLE"
+          lower=$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]')
+          bump=patch
+          case "$lower" in
+            *"breaking change"*|"major:"*|*"!:"*)  bump=major ;;
+            "feat:"*|"feature:"*|"minor:"*)        bump=minor ;;
+          esac
+          echo "type=$bump" >> "$GITHUB_OUTPUT"
+          echo "Bump type: $bump (from title: $title)"
+
+      - name: Bump APP_VERSION in global.R and DESCRIPTION
+        id: version
+        env:
+          BUMP: ${{ steps.bump.outputs.type }}
+        run: |
+          current=$(grep -oE 'APP_VERSION[[:space:]]*<-[[:space:]]*"[0-9]+\.[0-9]+\.[0-9]+"' global.R \
+                    | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+          if [ -z "$current" ]; then
+            echo "Could not read current APP_VERSION from global.R"; exit 1
+          fi
+          IFS='.' read -r maj min pat <<< "$current"
+          case "$BUMP" in
+            major) maj=$((maj + 1)); min=0; pat=0 ;;
+            minor) min=$((min + 1)); pat=0 ;;
+            patch) pat=$((pat + 1)) ;;
+          esac
+          new="$maj.$min.$pat"
+          echo "Bumping APP_VERSION: $current -> $new"
+          # Preserve the exact literal form: APP_VERSION <- "X.Y.Z"
+          sed -i -E "s/APP_VERSION[[:space:]]*<-[[:space:]]*\"$current\"/APP_VERSION <- \"$new\"/" global.R
+          if ! grep -qE "APP_VERSION[[:space:]]*<-[[:space:]]*\"$new\"" global.R; then
+            echo "sed did not update APP_VERSION"; exit 1
+          fi
+          sed -i -E "s/^Version: .*/Version: $new/" DESCRIPTION
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "new=$new"         >> "$GITHUB_OUTPUT"
+
+      - name: Create release-notes stub for this minor version
+        # Release notes are organised per MINOR version. Patch bumps share
+        # the same file as their siblings; only a minor or major bump
+        # creates a new stub, and only if the file does not already exist.
+        # Template lives in .github/workflows/release_notes_stub_template.md;
+        # this step substitutes __MINOR__ / __RELEASE_DATE__ / __PR_* /
+        # __BUMP__ placeholders.
+        if: steps.bump.outputs.type != 'patch'
+        env:
+          NEW:        ${{ steps.version.outputs.new }}
+          PR_TITLE:   ${{ github.event.pull_request.title }}
+          PR_NUMBER:  ${{ github.event.pull_request.number }}
+          PR_URL:     ${{ github.event.pull_request.html_url }}
+          BUMP:       ${{ steps.bump.outputs.type }}
+        run: |
+          minor=$(printf '%s' "$NEW" | awk -F. '{print $1"."$2}')
+          notes_dir="docs/change_log"
+          notes_file="${notes_dir}/RELEASE_NOTES_v${minor}.md"
+          template=".github/workflows/release_notes_stub_template.md"
+          mkdir -p "$notes_dir"
+          if [ -f "$notes_file" ]; then
+            echo "Release notes for v${minor} already exist, leaving untouched"
+            exit 0
+          fi
+          if [ ! -f "$template" ]; then
+            echo "Template not found at $template, skipping stub"
+            exit 0
+          fi
+          release_date=$(date -u +"%B %-d, %Y")
+          pr_title_trim=$(printf '%s' "$PR_TITLE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          esc() { printf '%s' "$1" | sed 's/[\\&|]/\\&/g'; }
+          sed \
+            -e "s|__MINOR__|$(esc "$minor")|g" \
+            -e "s|__RELEASE_DATE__|$(esc "$release_date")|g" \
+            -e "s|__PR_NUMBER__|$(esc "$PR_NUMBER")|g" \
+            -e "s|__PR_TITLE__|$(esc "$pr_title_trim")|g" \
+            -e "s|__PR_URL__|$(esc "$PR_URL")|g" \
+            -e "s|__BUMP__|$(esc "$BUMP")|g" \
+            "$template" > "$notes_file"
+          echo "Wrote release-notes stub: $notes_file"
+          echo "notes_file=$notes_file" >> "$GITHUB_OUTPUT"
+        id: notes
+
+      - name: Commit and push
+        env:
+          NEW: ${{ steps.version.outputs.new }}
+          NOTES_FILE: ${{ steps.notes.outputs.notes_file }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add global.R DESCRIPTION
+          if [ -n "$NOTES_FILE" ] && [ -f "$NOTES_FILE" ]; then
+            git add "$NOTES_FILE"
+          fi
+          if git diff --cached --quiet; then
+            echo "No version change to commit"
+            exit 0
+          fi
+          git commit -m "chore: bump version to $NEW [skip ci]"
+          # Retry on push conflict: another merge may have landed on main
+          # between the checkout and the push.
+          for i in 1 2 3; do
+            if git push origin main; then
+              echo "Push succeeded on attempt $i"
+              exit 0
+            fi
+            echo "Push failed on attempt $i, rebasing on latest main..."
+            git pull --rebase origin main || true
+          done
+          echo "Could not push bump commit after 3 attempts"
+          exit 1

@@ -1,0 +1,24 @@
+Type: Project
+Package: SportsAnalyticsApp
+Title: G League Shot Analytics Shiny App
+Version: 0.1.0
+Description: Shiny app for G League shooting by court zone: player profiles,
+    comparisons, teams, leaders and player types, with sign-in and admin
+    screens. Lists the packages for CI (r-lib/actions/setup-r-dependencies);
+    the app version itself is APP_VERSION in global.R.
+License: MIT + file LICENSE
+Imports:
+    bsicons,
+    bslib,
+    httr,
+    jsonlite,
+    plotly,
+    reactable,
+    shiny (>= 1.8.1),
+    shinyjs,
+    sodium
+Suggests:
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+Encoding: UTF-8
