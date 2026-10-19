@@ -1,7 +1,7 @@
 Type: Project
 Package: SportsAnalyticsApp
 Title: G League Shot Analytics Shiny App
-Version: 0.2.0
+Version: 0.2.1
 Description: Shiny app for G League shooting by court zone: player profiles,
     comparisons, teams, leaders and player types, with sign-in and admin
     screens. Lists the packages for CI (r-lib/actions/setup-r-dependencies);

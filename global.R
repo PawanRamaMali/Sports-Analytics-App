@@ -6,7 +6,7 @@
 
 # Bumped by .github/workflows/auto-version-bump.yml when a PR is merged into
 # main; docs/VERSION_HISTORY.md lists what each version has.
-APP_VERSION <- "0.2.0"
+APP_VERSION <- "0.2.1"
 
 suppressPackageStartupMessages({
   library(shiny)
