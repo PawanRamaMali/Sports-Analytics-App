@@ -12,12 +12,9 @@ CLAUDE.md
 README.md
 docs/
 tests/
-e2e/
-node_modules/
-package.json
-package-lock.json
-playwright.config.ts
+pytest.ini
+.venv/
+.pytest_cache/
 test-results/
-playwright-report/
 scraper/
 data/users.csv
